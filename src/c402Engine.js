@@ -44,6 +44,9 @@ export const generateMockTxHash = (reference) => {
   return 'tx_preprod_' + Math.abs(hash).toString(16).padEnd(24, '0') + 'c402';
 };
 
+// Base API URL for backend verification (configured for Vercel/Render deployments)
+const BACKEND_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 // C402 Challenge-Response Flow by executing real backend endpoints
 export const processC402Request = async (route, headers = {}, activeEndpoint) => {
   // CORRECT ROUTE MAPPING FIX: Map Sandbox route to Express backend route
@@ -56,7 +59,7 @@ export const processC402Request = async (route, headers = {}, activeEndpoint) =>
     backendRoute = `/api${route}`;
   }
 
-  const url = `http://localhost:8080${backendRoute}`;
+  const url = `${BACKEND_BASE_URL}${backendRoute}`;
   
   // Abort controller for 5-second fetch timeouts
   const controller = new AbortController();
@@ -221,7 +224,7 @@ export const processC402Request = async (route, headers = {}, activeEndpoint) =>
 // Retrieve spent cache list from Express backend proxy
 export const getSpentCacheList = async () => {
   try {
-    const res = await fetch("http://localhost:8080/api/v1/spent-cache");
+    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/spent-cache`);
     const json = await res.json();
     return json.spentHashes || [];
   } catch (e) {
@@ -232,7 +235,7 @@ export const getSpentCacheList = async () => {
 
 export const clearSpentCache = async () => {
   try {
-    await fetch("http://localhost:8080/api/v1/spent-cache", { method: 'DELETE' });
+    await fetch(`${BACKEND_BASE_URL}/api/v1/spent-cache`, { method: 'DELETE' });
   } catch (e) {
     console.warn("Offline fallback reset.");
   }
