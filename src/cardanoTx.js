@@ -7,7 +7,7 @@ const bytesToHex = (bytes) => Array.from(bytes, byte => byte.toString(16).padSta
  * Build a Cardano transaction that pays the merchant address.
  * Enforces Preprod network, validates UTxO selection, calculates fees, and returns unsigned CBOR hex.
  */
-export async function buildPaymentTx(walletApi, recipientAddr, lovelaceAmount, protocolParams) {
+export async function buildPaymentTx(walletApi, recipientAddr, lovelaceAmount, reference, protocolParams) {
   // 1. Validate preprod network (networkId 0 = preprod, 1 = mainnet)
   const networkId = await walletApi.getNetworkId();
   if (networkId !== 0) {
@@ -55,7 +55,7 @@ export async function buildPaymentTx(walletApi, recipientAddr, lovelaceAmount, p
   // 5. Bind this payment to the gateway challenge in transaction metadata.
   txBuilder.add_json_metadatum_with_schema(
     CSL.BigNum.from_str('402'),
-    JSON.stringify({ protocol: 'c402-v1', recipient: recipientAddr, amount_lovelaces: lovelaceAmount }),
+    JSON.stringify({ protocol: 'c402-v1', reference, recipient: recipientAddr, amount_lovelaces: lovelaceAmount }),
     CSL.MetadataJsonSchema.BasicConversions
   );
 

@@ -3,7 +3,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/Premkumar1845/ProofPair.git">
+  <a href="https://github.com/devndesigner6/c402-web.git">
     <img src="public/logo-dark.png" alt="Logo" width="120" height="120" style="border-radius: 50%; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
   </a>
 
@@ -12,14 +12,14 @@
   <p align="center">
     A decentralized pay-per-request HTTP 402 proxy billing gateway for Cardano microservices and AI inferences.
     <br />
-    <a href="https://github.com/Premkumar1845/ProofPair.git"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/devndesigner6/c402-web.git"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://drive.google.com/drive/folders/1dghSpZDKvYgrfFe1V5ZJHGW_5xFdT0cK?usp=sharing">Video Demo</a>
     &middot;
-    <a href="https://github.com/Premkumar1845/ProofPair.git/issues">Report Bug</a>
+    <a href="https://github.com/devndesigner6/c402-web.git/issues">Report Bug</a>
     &middot;
-    <a href="https://github.com/Premkumar1845/ProofPair.git/issues">Request Feature</a>
+    <a href="https://github.com/devndesigner6/c402-web.git/issues">Request Feature</a>
   </p>
 </div>
 
@@ -62,14 +62,14 @@ C402 is an implementation of the HTTP 402 (Payment Required) standard designed f
 Key capabilities:
 * **Decentralized Proxy Interception:** Instantly responds with `HTTP 402 Payment Required` headers containing payout addresses, pricing models, and signature challenge references.
 * **Double-Spend Mitigation:** In-memory tracking lists protect developers from replay attacks and multiple reuse of transaction proofs.
-* **Preprod Sync Verification:** Directly queries Cardano ledger mempool state to authorize endpoint execution in milliseconds.
-* **SAT Satisfaction Audio Toggle:** satisfies the Buddhsentripathi-style Centered glassmorphic design theme with Web Audio API click sound toggles.
+* **Preprod Ledger Verification:** Queries Blockfrost to verify the real transaction recipient, amount, confirmation, and challenge reference.
+* **Payment Receipts:** Successful protected responses include the verified transaction hash, block, slot, amount, network, and verification timestamp.
 
 ### Built With
 
 * **Vite & React 18:** Lightweight SPA dashboard interface.
 * **Node.js & Express:** Gateway proxy intercepting middleware.
-* **Aiken:** Cardano smart contracts validator.
+* **Aiken:** Cardano smart contract validator source is included for protocol reference.
 * **Framer Motion & Lucide Icons:** Responsive animation layers.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -89,8 +89,8 @@ Follow these steps to run the gateway and sandbox playground locally.
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/Premkumar1845/ProofPair.git
-   cd ProofPair
+   git clone https://github.com/devndesigner6/c402-web.git
+   cd c402-web
    ```
 2. Install dependencies:
    ```sh
@@ -111,7 +111,7 @@ Follow these steps to run the gateway and sandbox playground locally.
 <!-- USAGE -->
 ## Usage
 
-1. Open the website at `http://localhost:5174/` and navigate to the **Sandbox Playground**.
+1. Open the website at `http://localhost:5173/` and navigate to the **Sandbox Playground**.
 2. Select **Llama-3 Coder API** and trigger **Call Protected API** to fetch the 402 challenge.
 3. Paste a Cerebras API Key into the configuration panel to unlock live Llama-3 completions.
 4. Connect a Cardano Preprod Lace/Eternl wallet and click **Submit Payment in Wallet**.
@@ -136,7 +136,7 @@ Follow these steps to run the gateway and sandbox playground locally.
 - [ ] Add persistent replay storage (Redis/PostgreSQL)
 - [ ] Add mainnet network configuration
 
-See the [open issues](https://github.com/Premkumar1845/ProofPair.git/issues) for a full list of proposed features and known bugs.
+See the [open issues](https://github.com/devndesigner6/c402-web.git/issues) for a full list of proposed features and known bugs.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -164,9 +164,9 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Contact
 
 Hemanth - [hemanthme.in](https://hemanthme.in)  
-Prem Kumar - [@Premkumar1845](https://github.com/Premkumar1845/)  
+Project team - [@devndesigner6](https://github.com/devndesigner6/)  
 
-Project Link: [https://github.com/Premkumar1845/ProofPair](https://github.com/Premkumar1845/ProofPair)
+Project Link: [https://github.com/Premkumar1845/c402-web](https://github.com/Premkumar1845/c402-web)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

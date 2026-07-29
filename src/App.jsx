@@ -82,21 +82,21 @@ export default function App() {
         id: "ep-1",
         name: "Llama-3 Coder API",
         route: "/v1/ai/generate-code",
-        priceLovelace: 100000,
-        priceAda: "0.1",
+        priceLovelace: 1000000,
+        priceAda: "1",
         targetUrl: "https://api.cerebras.ai/v1/chat/completions",
         calls: 142,
-        earnings: "14.2"
+        earnings: "142"
       },
       {
         id: "ep-2",
         name: "Cardano Indexer API",
         route: "/v1/ledger/block-details",
-        priceLovelace: 50000,
-        priceAda: "0.05",
+        priceLovelace: 1000000,
+        priceAda: "1",
         targetUrl: "https://cardano-preprod.blockfrost.io/api/v0/blocks",
         calls: 89,
-        earnings: "4.45"
+        earnings: "89"
       }
     ];
   });
@@ -104,7 +104,7 @@ export default function App() {
   const [newEpName, setNewEpName] = useState('');
   const [newEpRoute, setNewEpRoute] = useState('');
   const [newEpTarget, setNewEpTarget] = useState('');
-  const [newEpPrice, setNewEpPrice] = useState('0.1');
+  const [newEpPrice, setNewEpPrice] = useState('1');
 
   // General App states
   const [codeTab, setCodeTab] = useState('javascript');
@@ -342,6 +342,7 @@ export default function App() {
         walletApi,
         paymentChallenge.address,
         paymentChallenge.price,
+        paymentChallenge.reference,
         protocolParams
       );
 
@@ -449,7 +450,7 @@ export default function App() {
     setNewEpName('');
     setNewEpRoute('');
     setNewEpTarget('');
-    setNewEpPrice('0.1');
+    setNewEpPrice('1');
 
     setGatewayLogs(prev => [
       `[${new Date().toLocaleTimeString()}] [Node Admin] Registered clean route: ${newEp.route} -> ${newEp.targetUrl}`,

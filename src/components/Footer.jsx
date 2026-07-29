@@ -25,7 +25,7 @@ export default function Footer() {
                 Hemanth
               </a> 
               &amp; 
-              <a href="https://github.com/Premkumar1845/" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', textDecoration: 'underline' }}>
+              <a href="https://github.com/devndesigner6/" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', textDecoration: 'underline' }}>
                 Prem Kumar
               </a>
             </p>
@@ -39,7 +39,7 @@ export default function Footer() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--fg-muted)' }}>
               <span>OSS Repo:</span>
               <a 
-                href="https://github.com/Premkumar1845/ProofPair.git" 
+                href="https://github.com/devndesigner6/c402-web.git" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 style={{ 
@@ -55,7 +55,7 @@ export default function Footer() {
                   fontSize: '0.72rem'
                 }}
               >
-                <Github size={11} /> ProofPair.git
+                <Github size={11} /> c402-web.git
               </a>
             </div>
 

@@ -376,7 +376,7 @@ export default function Sandbox({
                             <Cpu size={12} /> Cerebras AI Audit report
                           </div>
                           <div style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: '#eee', lineHeight: '1.4' }}>
-                            {isCerebrasLoading ? 'Querying Cerebras llama-3.3-70b...' : (cerebrasReport || 'Verification complete. Staking signature matches database registry. Transaction marked spent.')}
+                            {isCerebrasLoading ? 'Querying Cerebras llama-3.3-70b...' : (cerebrasReport || 'Payment verified by Blockfrost. Transaction marked spent.')}
                           </div>
                         </div>
                       )}

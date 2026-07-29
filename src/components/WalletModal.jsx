@@ -17,7 +17,7 @@ export default function WalletModal({ installedWallets, connectWallet, setShowWa
           <Wallet size={18} /> Connect Wallet
         </h3>
         <p style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', lineHeight: '1.4' }}>
-          Select an injected Cardano Web3 wallet to authorize transaction signatures.
+          Select an injected Cardano wallet to build, sign, and submit a Preprod payment transaction.
         </p>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

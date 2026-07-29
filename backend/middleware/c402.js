@@ -101,6 +101,18 @@ export const c402Middleware = (config) => {
         });
       }
 
+      const metadataResponse = await axios.get(`${BLOCKFROST_API_URL}/txs/${txHash}/metadata`, {
+        headers: { 'project_id': blockfrostProjectId }
+      });
+      const c402Metadata = metadataResponse.data.find(item => item.label === '402');
+      const metadata = c402Metadata?.json_metadata;
+      if (metadata?.protocol !== 'c402-v1' || metadata?.reference !== reference || metadata?.recipient !== developerAddress || Number(metadata?.amount_lovelaces) !== priceLovelaces) {
+        return res.status(401).json({
+          error: "Unauthorized",
+          message: "Transaction metadata does not match the C402 payment challenge."
+        });
+      }
+
       const utxoResponse = await axios.get(`${BLOCKFROST_API_URL}/txs/${txHash}/utxos`, {
         headers: { 'project_id': blockfrostProjectId }
       });

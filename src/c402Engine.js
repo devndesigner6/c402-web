@@ -106,7 +106,7 @@ export const requestCerebrasAuditReport = async (apiKey, txHash, endpointRoute, 
 A client has paid a micro-payment of ${priceAda} ADA to access the route ${endpointRoute}. 
 The verified transaction hash is ${txHash}.
 Write a short, professional, 2-3 sentence technical report in a clean monospaced style.
-Explain the validation state, the confirmation via the Cardano preprod mempool, and the double-spend clearance status. 
+Explain the validation state, Blockfrost confirmation on Cardano Preprod, and the double-spend clearance status. 
 Highlight the transaction details and speed. Avoid greetings, just output the log lines directly.`;
 
   try {
@@ -141,52 +141,21 @@ Highlight the transaction details and speed. Avoid greetings, just output the lo
 // Developer SDK snippets
 export const developerSnippets = {
   javascript: `// C402 Node.js / Express Middleware
-import axios from 'axios';
-import { C402Cache } from 'c402-cache';
+import { c402Middleware } from './middleware/c402.js';
 
-const spentCache = new C402Cache(); // Redis or Local DB
+const paymentGate = c402Middleware({
+  blockfrostProjectId: process.env.BLOCKFROST_KEY,
+  developerAddress: process.env.PAYOUT_ADDRESS,
+  priceLovelaces: 1000000 // 1 ADA on Cardano Preprod
+});
 
-export const c402Gateway = async (req, res, next) => {
-  const auth = req.headers['authorization'];
-  const DEV_WALLET = "addr_test1qrf9x2...bf58cd";
-  const FEE_LOVELACES = 100000; // 0.1 ADA
-
-  // 1. Check for payment proof
-  if (!auth || !auth.startsWith('Bearer ')) {
-    const ref = \`ref_\${Math.random().toString(36).substr(2, 9)}\`;
-    res.setHeader('X-C402-Price', FEE_LOVELACES.toString());
-    res.setHeader('X-C402-Address', DEV_WALLET);
-    res.setHeader('X-C402-Reference', ref);
-    return res.status(402).json({ error: "Payment Required", reference_id: ref });
-  }
-
-  const txHash = auth.split(' ')[1];
-
-  // 2. Prevent Replay Attack
-  if (await spentCache.has(txHash)) {
-    return res.status(401).json({ error: "Double spend detected." });
-  }
-
-  // 3. Query Cardano Ledger (Blockfrost API)
-  try {
-    const response = await axios.get(\`https://cardano-preprod.blockfrost.io/api/v0/txs/\${txHash}/utxos\`, {
-      headers: { 'project_id': process.env.BLOCKFROST_KEY }
-    });
-
-    // Verify recipient output details
-    const validOutput = response.data.outputs.find(o => o.address === DEV_WALLET);
-    const quantity = parseInt(validOutput.amount.find(a => a.unit === 'lovelace').quantity);
-
-    if (quantity >= FEE_LOVELACES) {
-      await spentCache.set(txHash, true); // Mark spent
-      next(); // Authorize
-    } else {
-      res.status(401).json({ error: "Insufficient Lovelaces paid." });
-    }
-  } catch (err) {
-    res.status(401).json({ error: "Invalid transaction hash." });
-  }
-};`,
+app.get('/api/v1/ai-agent', paymentGate, (req, res) => {
+  res.json({
+    status: 'Success',
+    receipt: res.locals.receipt,
+    payload: { data: 'Protected API payload unlocked.' }
+  });
+});`,
   aiken: `// Aiken Smart Contract for payment verification state
 validator {
   fn spend_verification(

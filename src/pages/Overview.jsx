@@ -53,7 +53,7 @@ export default function Overview({ setCurrentPage }) {
           </h1>
 
           <p style={{ color: 'var(--fg-muted)', fontSize: '1.1rem', maxWidth: '650px', margin: '0 auto 36px auto', lineHeight: '1.6', fontWeight: '300' }}>
-            <BlurText text="C402 intercepts API requests, issues a Payment Required challenge, and parses Cardano transactions to verify payment details under a second. No databases, no subscriptions, no accounts." delay={0.01} />
+            <BlurText text="C402 intercepts API requests, issues a Payment Required challenge, and verifies real Cardano Preprod payments through Blockfrost. No subscriptions or accounts are required for the client." delay={0.01} />
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
@@ -112,9 +112,9 @@ export default function Overview({ setCurrentPage }) {
             <div className="soldiff-col-4">
               <SpotlightCard style={{ padding: '32px', height: '100%' }}>
                 <GitBranch size={24} style={{ color: 'var(--accent-red)', marginBottom: '16px' }} />
-                <h3 style={{ fontSize: '1.3rem', color: '#fff', marginBottom: '12px' }}>No Database Required</h3>
+                <h3 style={{ fontSize: '1.3rem', color: '#fff', marginBottom: '12px' }}>Wallet-Native Access</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--fg-muted)', lineHeight: '1.5' }}>
-                  Developers don't need to register emails, manage tokens, or build login walls. The client's wallet acts as their account credential.
+                  Clients pay from their Cardano wallet instead of creating subscriptions, accounts, or prepaid API-credit balances.
                 </p>
               </SpotlightCard>
             </div>
@@ -129,14 +129,14 @@ export default function Overview({ setCurrentPage }) {
           
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '2.5rem', fontWeight: '700', fontFamily: 'var(--font-numbers)' }}>
-              <ShinyText text="< 900ms" speed={2} />
+              <ShinyText text="Preprod" speed={2} />
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', textTransform: 'uppercase', marginTop: '4px' }}>Avg Mempool Verification</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', textTransform: 'uppercase', marginTop: '4px' }}>Cardano Network</div>
           </div>
           
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '2.5rem', fontWeight: '700', fontFamily: 'var(--font-numbers)' }}>
-              <ShinyText text="0.17 ADA" speed={2.5} />
+              <ShinyText text="1 ADA" speed={2.5} />
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', textTransform: 'uppercase', marginTop: '4px' }}>Standard Ledger Fee</div>
           </div>
@@ -198,7 +198,7 @@ export default function Overview({ setCurrentPage }) {
               </div>
               <h4 style={{ fontSize: '1.05rem', color: '#fff', fontWeight: '600' }}>Mempool Audit</h4>
               <p style={{ fontSize: '0.78rem', color: 'var(--fg-muted)', lineHeight: '1.4' }}>
-                Client resubmits request with Tx Hash. Node middleware checks mempool to confirm metadata matches. Double-spend cache mitigation completes in &lt; 2ms.
+                Client retries with the transaction hash and challenge reference. The gateway verifies the confirmed transaction through Blockfrost and rejects reused hashes.
               </p>
             </div>
 
@@ -265,7 +265,7 @@ const app = express();
 const paymentGate = c402Middleware({
   blockfrostProjectId: process.env.BLOCKFROST_KEY,
   developerAddress: "addr_test1qrf9x2...",
-  priceLovelaces: 100000 // 0.1 ADA
+  priceLovelaces: 1000000 // 1 ADA on Cardano Preprod
 });
 
 // Endpoint automatically wrapped in HTTP 402 checks!
