@@ -1,8 +1,5 @@
 // C402 Core Payment Verification Engine
 
-// Simple in-memory storage for spent transactions to prevent replay attacks
-const spentTxCache = new Set();
-
 // Default hardcoded endpoints
 export const apiEndpoints = [
   {
@@ -75,12 +72,6 @@ export const processC402Request = async (route, headers = {}, activeEndpoint) =>
 
     const data = await response.json();
 
-    // Sync local cache with backend response
-    if (response.status === 200 && headers['Authorization']) {
-      const txHash = headers['Authorization'].split(' ')[1];
-      spentTxCache.add(txHash);
-    }
-
     return {
       status: response.status,
       statusText: response.statusText,
@@ -99,26 +90,13 @@ export const processC402Request = async (route, headers = {}, activeEndpoint) =>
 };
 
 // Retrieve spent cache list from Express backend proxy
-export const getSpentCacheList = async () => {
-  try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/spent-cache`);
-    const json = await res.json();
-    return json.spentHashes || [];
-  } catch (e) {
-    return Array.from(spentTxCache);
-  }
-};
+export const getSpentCacheList = async () => [];
 
 export const clearSpentCache = async () => {
-  try {
-    await fetch(`${BACKEND_BASE_URL}/api/v1/spent-cache`, { method: 'DELETE' });
-  } catch (e) {
-    console.warn("Backend offline.");
-  }
-  spentTxCache.clear();
+  throw new Error("Cache administration requires an authenticated backend administrator.");
 };
 
-export const getSpentCacheCount = () => spentTxCache.size;
+export const getSpentCacheCount = () => 0
 
 // Call Cerebras API (Llama-3.3-70b) to audit and describe the micro-transaction
 export const requestCerebrasAuditReport = async (apiKey, txHash, endpointRoute, priceAda) => {

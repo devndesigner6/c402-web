@@ -184,9 +184,9 @@ export default function Overview({ setCurrentPage }) {
                 <span style={{ color: 'var(--accent-amber)', fontFamily: 'var(--font-bitmap)', fontSize: '2.5rem', lineHeight: '1', fontWeight: '400' }}>02</span>
                 <span style={{ fontSize: '0.62rem', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Wallet</span>
               </div>
-              <h4 style={{ fontSize: '1.05rem', color: '#fff', fontWeight: '600' }}>CIP-30 Signature</h4>
+              <h4 style={{ fontSize: '1.05rem', color: '#fff', fontWeight: '600' }}>CIP-30 Payment</h4>
               <p style={{ fontSize: '0.78rem', color: 'var(--fg-muted)', lineHeight: '1.4' }}>
-                Injected browser wallet (Lace or Eternl) prompts the developer. The user authorizes transaction, signing metadata with private key credentials on-chain.
+                Lace or Eternl builds, signs, and submits a real ADA transaction on Cardano Preprod. The wallet returns the transaction hash for the automatic retry.
               </p>
             </div>
 

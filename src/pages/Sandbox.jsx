@@ -147,7 +147,7 @@ export default function Sandbox({
                         </button>
                       </div>
                       <div style={{ fontSize: '0.65rem', color: 'var(--fg-muted)', lineHeight: '1.3' }}>
-                        Optional: provide a Cerebras key to query live Llama-3 models; otherwise the gateway returns its built-in sample response.
+                        A Cerebras key is required for the live paid AI response. The gateway never substitutes a sample response.
                       </div>
                     </div>
                   )}
@@ -236,7 +236,7 @@ export default function Sandbox({
                     </div>
 
                     <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>
-                      Endpoint locked. Connect a wallet in the header and authorize a signature payload to request access.
+                      Endpoint locked. Connect a Cardano Preprod wallet, submit the requested ADA payment, and wait for on-chain verification.
                     </div>
 
                     <div style={{ fontSize: '0.74rem', fontFamily: 'var(--font-numbers)', display: 'flex', flexDirection: 'column', gap: '4px', color: '#bbb' }}>
@@ -260,7 +260,7 @@ export default function Sandbox({
                         </Magnet>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-green)', fontSize: '0.75rem', fontWeight: '600' }}>
-                          <CheckCircle size={14} /> Transaction signature active in headers.
+                          <CheckCircle size={14} /> Transaction submitted; waiting for on-chain verification.
                         </div>
                       )}
 
@@ -329,7 +329,7 @@ export default function Sandbox({
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', height: '220px', overflowY: 'auto' }}>
                   {spentDbList.length === 0 ? (
                     <div style={{ fontSize: '0.72rem', color: '#444', fontStyle: 'italic' }}>
-                      Double spend index clean. Ready to parse transactions.
+                      Replay cache details are available only to authenticated administrators.
                     </div>
                   ) : (
                     spentDbList.map((hash, i) => (

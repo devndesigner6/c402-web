@@ -1,4 +1,7 @@
-import * as CSL from '@emurgo/cardano-serialization-lib-browser';
+import * as CSL from '@emurgo/cardano-serialization-lib-asmjs';
+
+const hexToBytes = (hex) => Uint8Array.from(hex.match(/.{1,2}/g) || [], byte => parseInt(byte, 16));
+const bytesToHex = (bytes) => Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
 
 /**
  * Build a Cardano transaction that pays the merchant address.
@@ -25,13 +28,13 @@ export async function buildPaymentTx(walletApi, recipientAddr, lovelaceAmount, p
   // 3. Parse UTxOs and addresses with CSL
   const utxos = utxosHex.map(hex => {
     try {
-      return CSL.TransactionUnspentOutput.from_bytes(Buffer.from(hex, 'hex'));
+      return CSL.TransactionUnspentOutput.from_bytes(hexToBytes(hex));
     } catch (e) {
       throw new Error(`Failed to parse UTxO: ${e.message}`);
     }
   });
 
-  const changeAddr = CSL.Address.from_bytes(Buffer.from(changeAddrHex, 'hex'));
+  const changeAddr = CSL.Address.from_bytes(hexToBytes(changeAddrHex));
   const recipientAddress = CSL.Address.from_bech32(recipientAddr);
 
   // 4. Build transaction with protocol parameters
@@ -49,7 +52,14 @@ export async function buildPaymentTx(walletApi, recipientAddr, lovelaceAmount, p
       .build()
   );
 
-  // 5. Add output: payment to merchant
+  // 5. Bind this payment to the gateway challenge in transaction metadata.
+  txBuilder.add_json_metadatum_with_schema(
+    CSL.BigNum.from_str('402'),
+    JSON.stringify({ protocol: 'c402-v1', recipient: recipientAddr, amount_lovelaces: lovelaceAmount }),
+    CSL.MetadataJsonSchema.BasicConversions
+  );
+
+  // 6. Add output: payment to merchant
   txBuilder.add_output(
     CSL.TransactionOutput.new(
       recipientAddress,
@@ -57,35 +67,21 @@ export async function buildPaymentTx(walletApi, recipientAddr, lovelaceAmount, p
     )
   );
 
-  // 6. Add inputs (simple: add UTxOs until output is covered)
-  let inputValue = CSL.Value.new(CSL.BigNum.from_str("0"));
+  // 7. Add inputs using CSL coin selection
+  const txInputs = CSL.TransactionUnspentOutputs.new();
+  utxos.forEach(utxo => txInputs.add(utxo));
+  txBuilder.add_inputs_from(txInputs, CSL.CoinSelectionStrategyCIP2.LargestFirstMultiAsset);
 
-  for (const utxo of utxos) {
-    txBuilder.add_input(
-      utxo.output().address(),
-      utxo.input(),
-      utxo.output().amount()
-    );
-
-    inputValue = inputValue.checked_add(utxo.output().amount());
-
-    // Check if we have enough to cover output + estimated fee
-    if (inputValue.compare(CSL.Value.new(CSL.BigNum.from_str(lovelaceAmount.toString()))) > 0) {
-      break;
-    }
-  }
-
-  // 7. Add change output
+  // 8. Add change output
   txBuilder.add_change_if_needed(changeAddr);
 
   // 8. Build transaction body and create transaction
   try {
     const txBody = txBuilder.build();
-    const txHash = CSL.hash_transaction(txBody);
     const witnesses = CSL.TransactionWitnessSet.new();
     const tx = CSL.Transaction.new(txBody, witnesses);
 
-    return Buffer.from(tx.to_bytes()).toString('hex');
+    return bytesToHex(tx.to_bytes());
   } catch (err) {
     throw new Error(`Failed to build transaction: ${err.message}`);
   }

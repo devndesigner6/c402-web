@@ -413,10 +413,8 @@ export default function App() {
 
   // Reset Node spent index cache
   const resetCache = async () => {
-    await clearSpentCache();
-    setSpentDbList([]);
     setGatewayLogs(prev => [
-      `[${new Date().toLocaleTimeString()}] [Node Admin] Resetting proxy cache. Replay protection logs cleared.`,
+      `[${new Date().toLocaleTimeString()}] [Node Admin] Cache reset is disabled in the public client. Use the authenticated admin API.`,
       ...prev
     ]);
   };

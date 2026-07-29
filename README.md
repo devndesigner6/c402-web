@@ -114,11 +114,12 @@ Follow these steps to run the gateway and sandbox playground locally.
 1. Open the website at `http://localhost:5174/` and navigate to the **Sandbox Playground**.
 2. Select **Llama-3 Coder API** and trigger **Call Protected API** to fetch the 402 challenge.
 3. Paste a Cerebras API Key into the configuration panel to unlock live Llama-3 completions.
-4. Connect a Cardano preprod-configured Lace wallet and click **Sign Payment**.
-5. Approve the signature payload in the Lace extension.
-6. Click **Call Protected API** again to submit the transaction token and unlock the code generation response.
+4. Connect a Cardano Preprod Lace/Eternl wallet and click **Submit Payment in Wallet**.
+5. Review and approve the real 1 ADA transaction to the merchant address.
+6. The wallet submits the transaction, and the gateway automatically retries with the transaction hash and challenge reference.
+7. After Blockfrost indexes the transaction, the protected response includes a payment receipt.
 
-**Note:** This gateway requires real Cardano transactions. Configure BLOCKFROST_KEY in `backend/.env` to enable mainnet/preprod verification.
+**Requirements:** Configure `PAYOUT_ADDRESS`, `BLOCKFROST_KEY`, `CEREBRAS_KEY`, and `ADMIN_TOKEN` in `backend/.env`. The wallet must be on Cardano Preprod and funded with test ADA. Blockfrost indexing can take several seconds; retry after an HTTP 425 response.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -131,7 +132,9 @@ Follow these steps to run the gateway and sandbox playground locally.
 - [x] Set up double-spend caching replay verification list
 - [x] Integrate live Cerebras Llama-3 code generations
 - [x] Add dynamic Blockfrost testnet block height checks
-- [ ] Implement full client-side ledger transaction serialization
+- [x] Implement full client-side ledger transaction serialization
+- [ ] Add persistent replay storage (Redis/PostgreSQL)
+- [ ] Add mainnet network configuration
 
 See the [open issues](https://github.com/Premkumar1845/ProofPair.git/issues) for a full list of proposed features and known bugs.
 

@@ -34,16 +34,16 @@ export default function Docs({ codeTab, setCodeTab, copied, handleCopy }) {
               </div>
 
               <div>
-                <h3 style={{ color: 'var(--fg-color)', fontSize: '1.2rem', marginBottom: '8px' }}>2. Signature &amp; Payment Verification</h3>
+                <h3 style={{ color: 'var(--fg-color)', fontSize: '1.2rem', marginBottom: '8px' }}>2. Build, Sign &amp; Submit</h3>
                 <p>
-                  The client uses a Cardano CIP-30 wallet extension to sign a message containing the reference UUID and the target address. The client then resubmits the request including this signature in the <code>Authorization: Bearer [signature]</code> header.
+                  The client uses a CIP-30 wallet on Cardano Preprod to build a real ADA transaction to the challenged merchant address. The wallet signs and submits it, returning a transaction hash. The client retries with <code>Authorization: Bearer [tx_hash]</code> and <code>X-C402-Reference: [reference]</code>.
                 </p>
               </div>
 
               <div>
-                <h3 style={{ color: 'var(--fg-color)', fontSize: '1.2rem', marginBottom: '8px' }}>3. Double-Spend Mitigation</h3>
+                <h3 style={{ color: 'var(--fg-color)', fontSize: '1.2rem', marginBottom: '8px' }}>3. Blockfrost Verification &amp; Receipt</h3>
                 <p>
-                  The gateway proxy verifies the signature and checks the transaction hash against an in-memory double-spend cache. If the hash has already been spent, the request is rejected with an <code>HTTP 401 Replay Attack</code> status to prevent double-spending.
+                  The gateway verifies the real transaction on Cardano Preprod, checks the merchant output and amount, confirms Blockfrost indexing, binds the payment to the challenge reference, and returns a receipt containing the transaction hash, block, slot, amount, and verification time. Reusing a verified hash is rejected with <code>HTTP 401 Replay Attack</code>.
                 </p>
               </div>
             </div>
