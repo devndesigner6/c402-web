@@ -11,6 +11,7 @@
     "postinstall": "cd backend && npm install"
   },
   "dependencies": {
+    "@emurgo/cardano-serialization-lib-browser": "^15.0.3",
     "framer-motion": "^12.42.2",
     "lucide-react": "^0.400.0",
     "ogl": "^1.0.11",

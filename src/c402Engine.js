@@ -9,8 +9,8 @@ export const apiEndpoints = [
     id: "ep-1",
     name: "Llama-3 Coder API",
     route: "/v1/ai/generate-code",
-    priceLovelace: 100000, // 0.1 ADA
-    priceAda: "0.1",
+    priceLovelace: 1000000, // 1 ADA; safely above Preprod minimum UTxO
+    priceAda: "1",
     targetUrl: "https://api.cerebras.ai/v1/chat/completions",
     description: "Generates secure code modules using Cerebras ultra-fast Llama inference."
   },
@@ -18,8 +18,8 @@ export const apiEndpoints = [
     id: "ep-2",
     name: "Cardano Indexer API",
     route: "/v1/ledger/block-details",
-    priceLovelace: 50000, // 0.05 ADA
-    priceAda: "0.05",
+    priceLovelace: 1000000, // 1 ADA; safely above Preprod minimum UTxO
+    priceAda: "1",
     targetUrl: "https://cardano-preprod.blockfrost.io/api/v0/blocks",
     description: "Returns detailed on-chain metadata and active script validators."
   }
@@ -156,8 +156,7 @@ Highlight the transaction details and speed. Avoid greetings, just output the lo
     const json = await response.json();
     return json.choices[0].message.content.trim();
   } catch (err) {
-    console.error("Cerebras AI query failed:", err.message);
-    return `[C402 Node] Verified transaction ${txHash.substring(0, 16)}... on Cardano preprod testnet. Payment of ${priceAda} ADA correctly routed. Double-spend protection cleared in 2ms. Client authorized to consume ${endpointRoute}.`;
+    throw new Error(`Cerebras AI unavailable: ${err.message}`);
   }
 };
 

@@ -14,6 +14,7 @@ import {
   requestCerebrasAuditReport,
   decodeCardanoAddress
 } from './c402Engine';
+import { buildPaymentTx } from './cardanoTx';
 
 export default function App() {
   // Theme state: 'dark' | 'light'
@@ -208,10 +209,10 @@ export default function App() {
         if (!isNaN(balanceVal)) {
           setWalletBalance((balanceVal / 1000000).toFixed(2));
         } else {
-          setWalletBalance("450.00"); 
+          setWalletBalance("Unavailable");
         }
       } catch (err) {
-        setWalletBalance("250.00");
+        setWalletBalance("Unavailable");
       }
 
       setGatewayLogs(prev => [
@@ -238,7 +239,7 @@ export default function App() {
   };
 
   // Execute C402 HTTP Request (Forwarding Cerebras key in headers)
-  const triggerApiCall = async () => {
+  const triggerApiCall = async (headerOverrides = {}) => {
     setIsCallingApi(true);
     setResponseState(null);
     
@@ -249,7 +250,7 @@ export default function App() {
     ]);
 
     // Append configured API key in request headers
-    const activeHeaders = { ...requestHeaders };
+    const activeHeaders = { ...requestHeaders, ...headerOverrides };
     if (apiKey) {
       activeHeaders['X-Cerebras-Key'] = apiKey;
     }
@@ -269,7 +270,8 @@ export default function App() {
       setPaymentChallenge({
         price: result.headers['x-c402-price'] || result.headers['X-C402-Price'],
         address: result.headers['x-c402-address'] || result.headers['X-C402-Address'],
-        reference: result.headers['x-c402-reference'] || result.headers['X-C402-Reference']
+        reference: result.headers['x-c402-reference'] || result.headers['X-C402-Reference'],
+        network: result.headers['x-c402-network'] || result.headers['X-C402-Network'] || 'preprod'
       });
     } else if (result.status === 401) {
       setGatewayLogs(prev => [
@@ -282,7 +284,8 @@ export default function App() {
         ...prev
       ]);
       syncSpentList();
-      triggerCerebrasAudit(activeHeaders['Authorization'].split(' ')[1]);
+      const verifiedTxHash = activeHeaders['Authorization']?.split(' ')[1];
+      if (verifiedTxHash) triggerCerebrasAudit(verifiedTxHash);
       
       // Update local dev console statistics
       setMyEndpoints(prev => prev.map(ep => {
@@ -296,13 +299,96 @@ export default function App() {
     }
   };
 
-  // A Cardano transaction must be submitted by the wallet before its hash can be verified.
+  // Build & submit real Cardano transaction via CIP-30
   const signPayment = async () => {
-    setGatewayLogs(prev => [
-      `[${new Date().toLocaleTimeString()}] [Wallet] Submit ${paymentChallenge?.price || 0} Lovelaces to the merchant address using your wallet.`,
-      `[${new Date().toLocaleTimeString()}] [Wallet] Paste the resulting preprod transaction hash below.`,
-      ...prev
-    ]);
+    if (!walletApi) {
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Wallet] ❌ Connect a Cardano wallet first`,
+        ...prev
+      ]);
+      return;
+    }
+
+    if (!paymentChallenge) {
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Wallet] ❌ No payment challenge available`,
+        ...prev
+      ]);
+      return;
+    }
+
+    setIsSigning(true);
+
+    try {
+      const BACKEND_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+      // 1. Fetch protocol params
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Wallet] Fetching protocol parameters...`,
+        ...prev
+      ]);
+
+      const paramsRes = await fetch(`${BACKEND_BASE_URL}/api/v1/cardano/protocol-params`);
+      if (!paramsRes.ok) throw new Error("Failed to fetch protocol parameters. Check BLOCKFROST_KEY.");
+      const protocolParams = await paramsRes.json();
+
+      // 2. Build transaction
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Wallet] Building payment (${paymentChallenge.price} Lovelaces)...`,
+        ...prev
+      ]);
+
+      const unsignedTxHex = await buildPaymentTx(
+        walletApi,
+        paymentChallenge.address,
+        paymentChallenge.price,
+        protocolParams
+      );
+
+      // 3. Sign transaction
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Wallet] Requesting signature from ${connectedWallet}...`,
+        ...prev
+      ]);
+
+      const signedTxHex = await walletApi.signTx(unsignedTxHex, true);
+
+      // 4. Submit to Cardano
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Wallet] Submitting to Cardano Preprod...`,
+        ...prev
+      ]);
+
+      const txHash = await walletApi.submitTx(signedTxHex);
+      setSignedTxHash(txHash);
+
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Wallet] ✓ Transaction submitted: ${txHash.substring(0, 16)}...`,
+        `[${new Date().toLocaleTimeString()}] [Gateway] Retrying with payment proof...`,
+        ...prev
+      ]);
+
+      // 5. Update headers with tx hash + reference, retry API call
+      setRequestHeaders(prev => ({
+        ...prev,
+        'Authorization': `Bearer ${txHash}`,
+        'X-C402-Reference': paymentChallenge.reference
+      }));
+
+      await triggerApiCall({
+        'Authorization': `Bearer ${txHash}`,
+        'X-C402-Reference': paymentChallenge.reference
+      });
+
+    } catch (err) {
+      console.error("Payment failed:", err);
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Wallet] ❌ ${err.message}`,
+        ...prev
+      ]);
+    } finally {
+      setIsSigning(false);
+    }
   };
 
   // Call Cerebras AI for transaction audit
