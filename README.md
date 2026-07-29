@@ -117,10 +117,8 @@ Follow these steps to run the gateway and sandbox playground locally.
 4. Connect a Cardano preprod-configured Lace wallet and click **Sign Payment**.
 5. Approve the signature payload in the Lace extension.
 6. Click **Call Protected API** again to submit the transaction token and unlock the code generation response.
-7. Copy the following valid Preprod testing transaction hash:
-   ```text
-   2dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62c402
-   ```
+
+**Note:** This gateway requires real Cardano transactions. Configure BLOCKFROST_KEY in `backend/.env` to enable mainnet/preprod verification.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

@@ -23,13 +23,14 @@ app.use(express.json());
 
 const BLOCKFROST_KEY = process.env.BLOCKFROST_KEY || "";
 const PAYOUT_ADDRESS = process.env.PAYOUT_ADDRESS || "addr_test1qrf9x2y4u9asqpwldjge937cnu2c7d9bc029ac1bf58cd";
+const CARDANO_NETWORK = process.env.CARDANO_NETWORK || "preprod";
 const BLOCKFROST_API_URL = "https://cardano-preprod.blockfrost.io/api/v0";
 
 console.log("----------------------------------------------------------------");
 console.log("[C402 Gateway Startup Diagnostics]");
 if (!BLOCKFROST_KEY) {
   console.warn("⚠ [WARNING] BLOCKFROST_KEY is not defined in .env!");
-  console.warn("  Live Cardano main/testnet verification will fall back to local sandbox simulator mode.");
+  console.warn("  Requests with payment proofs will be rejected until BLOCKFROST_KEY is configured.");
 } else {
   console.log("✓ BLOCKFROST_KEY config loaded successfully.");
 }
@@ -104,7 +105,7 @@ app.get('/api/v1/block-details', c402Middleware({ ...gatewayConfig, priceLovelac
         status: "Success (Live Ledger Data)",
         timestamp: new Date().toISOString(),
         payload: {
-          network: "preprod",
+          network: CARDANO_NETWORK,
           block_height: response.data.height,
           slot: response.data.slot,
           epoch: response.data.epoch,
@@ -116,9 +117,9 @@ app.get('/api/v1/block-details', c402Middleware({ ...gatewayConfig, priceLovelac
     console.warn("[Blockfrost Ledger Check Error]:", err.message);
   }
 
-  // Fallback if indexer API key is not supplied in .env
-  res.json({
-    status: "Success (Boilerplate Fallback)",
+    // Boilerplate response when no Blockfrost API key is configured
+    res.json({
+      status: "Success (Boilerplate Fallback)",
     timestamp: new Date().toISOString(),
     payload: {
       network: "preprod",

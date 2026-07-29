@@ -33,16 +33,7 @@ export const decodeCardanoAddress = (hexAddress) => {
   return `addr_test1q...${hexAddress.substring(hexAddress.length - 8)}`;
 };
 
-// Generates a mock transaction hash
-export const generateMockTxHash = (reference) => {
-  let hash = 0;
-  for (let i = 0; i < reference.length; i++) {
-    const char = reference.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return 'tx_preprod_' + Math.abs(hash).toString(16).padEnd(24, '0') + 'c402';
-};
+// ponytail: real tx hashes come from wallet signing, not generated
 
 // Base API URL for backend verification (configured for Vercel/Render deployments)
 const BACKEND_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -84,7 +75,7 @@ export const processC402Request = async (route, headers = {}, activeEndpoint) =>
 
     const data = await response.json();
 
-    // Sync mock local cache with response status
+    // Sync local cache with backend response
     if (response.status === 200 && headers['Authorization']) {
       const txHash = headers['Authorization'].split(' ')[1];
       spentTxCache.add(txHash);
@@ -98,126 +89,12 @@ export const processC402Request = async (route, headers = {}, activeEndpoint) =>
     };
   } catch (error) {
     clearTimeout(timeoutId);
-    console.warn("[C402 Engine] Backend server offline or timed out. Falling back to local simulation.", error.message);
-    
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const authHeader = headers['Authorization'] || headers['authorization'];
-        
-        // Step 1: Check if Authorization header with Tx Hash is present
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          const reference = `ref_${Math.random().toString(36).substr(2, 9)}`;
-          resolve({
-            status: 402,
-            statusText: "Payment Required",
-            headers: {
-              'Content-Type': 'application/json',
-              'X-C402-Price': activeEndpoint.priceLovelace.toString(),
-              'X-C402-Address': 'addr_test1qrf9x2y4u9asqpwldjge937cnu2c7d9bc029ac1bf58cd',
-              'X-C402-Reference': reference,
-              'X-C402-Status': 'Challenge Issued (Simulator)'
-            },
-            data: {
-              error: "Payment Required",
-              message: `This API resource requires a micro-payment of ${activeEndpoint.priceAda} ADA.`,
-              price_lovelaces: activeEndpoint.priceLovelace,
-              recipient_address: 'addr_test1qrf9x2y4u9asqpwldjge937cnu2c7d9bc029ac1bf58cd',
-              reference_id: reference
-            }
-          });
-          return;
-        }
-
-        // Step 2: Extract Tx Hash
-        const txHash = authHeader.split(' ')[1];
-
-        // Step 3: Check for Replay Attack (Double Spend Cache)
-        if (spentTxCache.has(txHash)) {
-          resolve({
-            status: 401,
-            statusText: "Unauthorized",
-            headers: {
-              'Content-Type': 'application/json',
-              'X-C402-Status': 'Replay Attack Blocked'
-            },
-            data: {
-              error: "Double Spend",
-              message: "This transaction proof has already been spent. Replay attack mitigated."
-            }
-          });
-          return;
-        }
-
-        // Step 4: Validate Transaction (Mock check - must end in 'c402')
-        if (!txHash.endsWith('c402')) {
-          resolve({
-            status: 401,
-            statusText: "Unauthorized",
-            headers: {
-              'Content-Type': 'application/json',
-              'X-C402-Status': 'Invalid Tx Hash'
-            },
-            data: {
-              error: "Invalid Payment Proof",
-              message: "The provided transaction hash does not exist on the Cardano network."
-            }
-          });
-          return;
-        }
-
-        // Step 5: Successful Verification. Mark as Spent
-        spentTxCache.add(txHash);
-
-        // Return requested mock data payload
-        const mockPayloads = {
-          "/v1/ai/generate-code": {
-            status: "Success",
-            timestamp: new Date().toISOString(),
-            requested_route: "/v1/ai/generate-code",
-            proof_hash: txHash,
-            payload: {
-              language: "Aiken",
-              module_name: "c402_checker",
-              code: "validator {\n  fn check_payment(datum: RefId, ctx: ScriptContext) {\n    let is_spent = check_inputs(ctx.transaction.inputs, datum)\n    is_spent\n  }\n}"
-            }
-          },
-          "/v1/ledger/block-details": {
-            status: "Success",
-            timestamp: new Date().toISOString(),
-            requested_route: "/v1/ledger/block-details",
-            proof_hash: txHash,
-            payload: {
-              block_height: 1048576,
-              slot: 45892010,
-              active_validators: 402,
-              network_id: "preprod",
-              epoch: 215
-            }
-          }
-        };
-
-        const activeRoute = route.replace('/api', '');
-
-        resolve({
-          status: 200,
-          statusText: "OK",
-          headers: {
-            'Content-Type': 'application/json',
-            'X-C402-Status': 'Payment Verified',
-            'X-C402-Auth-Token': 'verified_session_' + Math.random().toString(36).substr(2, 9)
-          },
-          data: mockPayloads[activeRoute] || { 
-            status: "Success", 
-            timestamp: new Date().toISOString(),
-            proof_hash: txHash,
-            payload: {
-              message: "Dynamic custom API endpoint payload released successfully.",
-              target_uri: activeEndpoint.targetUrl
-            }
-          }
-        });
-      }, 1000);
-    });
+    return {
+      status: 503,
+      statusText: "Service Unavailable",
+      headers: {},
+      data: { error: "Gateway unavailable", message: "Start the backend and configure BLOCKFROST_KEY for real payment verification." }
+    };
   }
 };
 
@@ -228,7 +105,6 @@ export const getSpentCacheList = async () => {
     const json = await res.json();
     return json.spentHashes || [];
   } catch (e) {
-    // fallback to local memory cache representation
     return Array.from(spentTxCache);
   }
 };
@@ -237,7 +113,7 @@ export const clearSpentCache = async () => {
   try {
     await fetch(`${BACKEND_BASE_URL}/api/v1/spent-cache`, { method: 'DELETE' });
   } catch (e) {
-    console.warn("Offline fallback reset.");
+    console.warn("Backend offline.");
   }
   spentTxCache.clear();
 };
@@ -280,7 +156,7 @@ Highlight the transaction details and speed. Avoid greetings, just output the lo
     const json = await response.json();
     return json.choices[0].message.content.trim();
   } catch (err) {
-    console.error("Cerebras AI query failed, using simulator:", err.message);
+    console.error("Cerebras AI query failed:", err.message);
     return `[C402 Node] Verified transaction ${txHash.substring(0, 16)}... on Cardano preprod testnet. Payment of ${priceAda} ADA correctly routed. Double-spend protection cleared in 2ms. Client authorized to consume ${endpointRoute}.`;
   }
 };

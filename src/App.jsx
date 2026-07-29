@@ -6,12 +6,11 @@ import Overview from './pages/Overview';
 import Sandbox from './pages/Sandbox';
 import Console from './pages/Console';
 import Docs from './pages/Docs';
-import { 
-  apiEndpoints, 
-  processC402Request, 
-  generateMockTxHash, 
-  getSpentCacheList, 
-  clearSpentCache, 
+import {
+  apiEndpoints,
+  processC402Request,
+  getSpentCacheList,
+  clearSpentCache,
   requestCerebrasAuditReport,
   decodeCardanoAddress
 } from './c402Engine';
@@ -285,7 +284,7 @@ export default function App() {
       syncSpentList();
       triggerCerebrasAudit(activeHeaders['Authorization'].split(' ')[1]);
       
-      // Update local dev console statistics for simulated calls
+      // Update local dev console statistics
       setMyEndpoints(prev => prev.map(ep => {
         if (ep.route === selectedEndpoint.route) {
           const calls = ep.calls + 1;
@@ -297,62 +296,13 @@ export default function App() {
     }
   };
 
-  // Real or simulated transaction signing
+  // A Cardano transaction must be submitted by the wallet before its hash can be verified.
   const signPayment = async () => {
-    if (!paymentChallenge) return;
-    setIsSigning(true);
-    
-    try {
-      if (walletApi) {
-        const timestamp = new Date().toLocaleTimeString();
-        setGatewayLogs(prev => [
-          `[${timestamp}] [Wallet] Connected wallet (${connectedWallet}) requested to sign payment reference ${paymentChallenge.reference}...`,
-          ...prev
-        ]);
-        
-        const hexData = Array.from(paymentChallenge.reference).map(c => c.charCodeAt(0).toString(16)).join('');
-        const rawAddresses = await walletApi.getUsedAddresses();
-        if (!rawAddresses || rawAddresses.length === 0) {
-          throw new Error("No addresses found in connected wallet.");
-        }
-        const rawSignAddress = rawAddresses[0];
-        const signature = await walletApi.signData(rawSignAddress, hexData);
-        const mockTx = generateMockTxHash(signature.signature.substring(0, 16) + paymentChallenge.reference);
-        setSignedTxHash(mockTx);
-        
-        setRequestHeaders(prev => ({
-          ...prev,
-          'Authorization': `Bearer ${mockTx}`
-        }));
-
-        setGatewayLogs(prev => [
-          `[${new Date().toLocaleTimeString()}] [Wallet] Proof signed securely. Cardano hash generated: ${mockTx}`,
-          ...prev
-        ]);
-      } else {
-        await new Promise(r => setTimeout(r, 1000));
-        const mockTx = generateMockTxHash(paymentChallenge.reference);
-        setSignedTxHash(mockTx);
-        
-        setRequestHeaders(prev => ({
-          ...prev,
-          'Authorization': `Bearer ${mockTx}`
-        }));
-
-        setGatewayLogs(prev => [
-          `[${new Date().toLocaleTimeString()}] [Wallet] [Simulation] Signed payment. Generated hash: ${mockTx}`,
-          ...prev
-        ]);
-      }
-    } catch (err) {
-      console.error("Signing failed:", err);
-      setGatewayLogs(prev => [
-        `[${new Date().toLocaleTimeString()}] [Wallet] ❌ Signature request failed: ${err.message}`,
-        ...prev
-      ]);
-    } finally {
-      setIsSigning(false);
-    }
+    setGatewayLogs(prev => [
+      `[${new Date().toLocaleTimeString()}] [Wallet] Submit ${paymentChallenge?.price || 0} Lovelaces to the merchant address using your wallet.`,
+      `[${new Date().toLocaleTimeString()}] [Wallet] Paste the resulting preprod transaction hash below.`,
+      ...prev
+    ]);
   };
 
   // Call Cerebras AI for transaction audit

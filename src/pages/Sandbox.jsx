@@ -147,7 +147,7 @@ export default function Sandbox({
                         </button>
                       </div>
                       <div style={{ fontSize: '0.65rem', color: 'var(--fg-muted)', lineHeight: '1.3' }}>
-                        No key? Enters mock simulation. Provide a key to query live Cerebras AI Llama-3 models.
+                        Optional: provide a Cerebras key to query live Llama-3 models; otherwise the gateway returns its built-in sample response.
                       </div>
                     </div>
                   )}
@@ -255,7 +255,7 @@ export default function Sandbox({
                             disabled={isSigning}
                           >
                             {isSigning ? <RefreshCw size={14} className="spin-animation" /> : <Fingerprint size={14} />}
-                            {isSigning ? 'Signing in Wallet...' : (connectedWallet ? `Sign Payment using ${connectedWallet}` : `Sign & Pay ${selectedEndpoint.priceAda} ADA`)}
+                            Submit Payment in Wallet
                           </button>
                         </Magnet>
                       ) : (
@@ -265,49 +265,8 @@ export default function Sandbox({
                       )}
 
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px', marginTop: '4px' }}>
-                        <label style={{ fontSize: '0.68rem', textTransform: 'uppercase', color: 'var(--fg-muted)', display: 'block', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                          Or Paste Test Cardano Tx Hash Manually (Must end in 'c402')
-                        </label>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. 549071c8de15c7824b22c9709a31a90654ee16ad6443bf58cd7a7f68ecaa2930c402"
-                            value={signedTxHash}
-                            onChange={(e) => setSignedTxHash(e.target.value)}
-                            style={{
-                              flex: 1,
-                              backgroundColor: 'var(--bg-color)',
-                              border: '1px solid var(--border-color)',
-                              borderRadius: '4px',
-                              color: 'var(--fg-color)',
-                              padding: '6px 10px',
-                              fontSize: '0.74rem',
-                              outline: 'none',
-                              fontFamily: 'var(--font-numbers)'
-                            }}
-                          />
-                          {signedTxHash && (
-                            <button 
-                              onClick={() => setSignedTxHash('')}
-                              style={{
-                                backgroundColor: 'transparent',
-                                border: '1px solid var(--border-color)',
-                                color: 'var(--accent-red)',
-                                borderRadius: '4px',
-                                padding: '0 8px',
-                                fontSize: '0.7rem',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Reset
-                            </button>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '0.62rem', color: 'var(--fg-muted)', marginTop: '4px', display: 'flex', gap: '4px', flexDirection: 'column' }}>
-                          <span>💡 Test Hashes (Ends in 'c402'):</span>
-                          <code style={{ color: 'var(--accent-amber)', fontSize: '0.6rem', userSelect: 'all', cursor: 'pointer' }}>
-                            2dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62dc9ad62c402
-                          </code>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--fg-muted)', fontFamily: 'var(--font-mono)' }}>
+                          Real Cardano transactions only. Configure BLOCKFROST_KEY in backend/.env
                         </div>
                       </div>
                     </div>

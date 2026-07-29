@@ -44,13 +44,7 @@ export const c402Middleware = (config) => {
         });
       }
 
-      // 3. Fallback for mock sandbox calls to allow zero-config offline testing
-      if (txHash.startsWith('tx_preprod_') && txHash.endsWith('c402')) {
-        spentCache.add(txHash);
-        return next();
-      }
-
-      // 4. Real Live Cardano Ledger Verification via Blockfrost
+      // 3. Real Live Cardano Ledger Verification via Blockfrost
       if (!blockfrostProjectId) {
         throw new Error("Missing Blockfrost API Key configuration.");
       }
