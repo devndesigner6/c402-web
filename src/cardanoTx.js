@@ -53,9 +53,10 @@ export async function buildPaymentTx(walletApi, recipientAddr, lovelaceAmount, r
   );
 
   // 5. Bind this payment to the gateway challenge in transaction metadata.
+  // metadata string values have a limit of 64 chars in CSL
   txBuilder.add_json_metadatum_with_schema(
     CSL.BigNum.from_str('402'),
-    JSON.stringify({ protocol: 'c402-v1', reference, recipient: recipientAddr, amount_lovelaces: lovelaceAmount }),
+    JSON.stringify({ prt: 'c402', ref: reference.slice(0, 12), rec: recipientAddr.slice(0, 12) }),
     CSL.MetadataJsonSchema.BasicConversions
   );
 

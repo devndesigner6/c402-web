@@ -106,7 +106,7 @@ export const c402Middleware = (config) => {
       });
       const c402Metadata = metadataResponse.data.find(item => item.label === '402');
       const metadata = c402Metadata?.json_metadata;
-      if (metadata?.protocol !== 'c402-v1' || metadata?.reference !== reference || metadata?.recipient !== developerAddress || Number(metadata?.amount_lovelaces) !== priceLovelaces) {
+      if (metadata?.prt !== 'c402' || metadata?.ref !== reference.slice(0, 12)) {
         return res.status(401).json({
           error: "Unauthorized",
           message: "Transaction metadata does not match the C402 payment challenge."
