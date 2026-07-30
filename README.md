@@ -61,7 +61,7 @@ C402 is an implementation of the HTTP 402 (Payment Required) standard designed f
 
 Key capabilities:
 * **Decentralized Proxy Interception:** Instantly responds with `HTTP 402 Payment Required` headers containing payout addresses, pricing models, and signature challenge references.
-* **Double-Spend Mitigation:** In-memory tracking lists protect developers from replay attacks and multiple reuse of transaction proofs.
+* **Replay Mitigation:** The MVP tracks verified transaction hashes in memory and rejects reuse; persistent Redis/PostgreSQL storage is the production upgrade.
 * **Preprod Ledger Verification:** Queries Blockfrost to verify the real transaction recipient, amount, confirmation, and challenge reference.
 * **Payment Receipts:** Successful protected responses include the verified transaction hash, block, slot, amount, network, and verification timestamp.
 

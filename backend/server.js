@@ -13,6 +13,7 @@ const BLOCKFROST_KEY = process.env.BLOCKFROST_KEY || "";
 const PAYOUT_ADDRESS = process.env.PAYOUT_ADDRESS;
 const CARDANO_NETWORK = "preprod";
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(',').map(origin => origin.trim()).filter(Boolean);
 const BLOCKFROST_API_URL = "https://cardano-preprod.blockfrost.io/api/v0";
 
 if (!PAYOUT_ADDRESS) {
@@ -21,14 +22,32 @@ if (!PAYOUT_ADDRESS) {
 }
 
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error('Origin not allowed by C402 CORS policy'));
+  },
   credentials: true,
   exposedHeaders: [
     'X-C402-Price', 'X-C402-Address', 'X-C402-Reference', 'X-C402-Network',
     'x-c402-price', 'x-c402-address', 'x-c402-reference', 'x-c402-network'
   ]
 }));
-app.use(express.json());
+app.use(express.json({ limit: '32kb' }));
+
+const rateWindowMs = 60 * 1000;
+const rateLimit = 60;
+const requestCounts = new Map();
+app.use((req, res, next) => {
+  const now = Date.now();
+  const entry = requestCounts.get(req.ip);
+  if (!entry || now - entry.startedAt >= rateWindowMs) {
+    requestCounts.set(req.ip, { startedAt: now, count: 1 });
+    return next();
+  }
+  entry.count += 1;
+  if (entry.count > rateLimit) return res.status(429).json({ error: 'Too Many Requests', message: 'Rate limit exceeded. Try again later.' });
+  next();
+});
 
 console.log("----------------------------------------------------------------");
 console.log("[C402 Gateway Startup Diagnostics]");
@@ -43,6 +62,8 @@ const gatewayConfig = {
   priceLovelaces: 1000000
 };
 
+const validatePrompt = (prompt) => typeof prompt === 'string' && prompt.length <= 4000 ? prompt : null;
+
 const withReceipt = (res, payload) => ({
   status: "Success",
   timestamp: new Date().toISOString(),
@@ -56,12 +77,15 @@ app.get('/api/v1/generate-code', c402Middleware(gatewayConfig), async (req, res)
     return res.status(503).json({ error: "Service Unavailable", message: "CEREBRAS_KEY is required for live AI responses." });
   }
 
+  const prompt = req.query.prompt || "Write a secure Cardano Aiken validator script for payment verification.";
+  if (!validatePrompt(prompt)) return res.status(400).json({ error: "Bad Request", message: "prompt must be a string no longer than 4000 characters." });
+
   try {
     const response = await axios.post("https://api.cerebras.ai/v1/chat/completions", {
       model: "llama-3.3-70b",
       messages: [
         { role: "system", content: "You are an expert Cardano smart contract assistant. Output ONLY raw Aiken code." },
-        { role: "user", content: req.query.prompt || "Write a secure Cardano Aiken validator script for payment verification." }
+        { role: "user", content: prompt }
       ],
       temperature: 0.2,
       max_tokens: 400

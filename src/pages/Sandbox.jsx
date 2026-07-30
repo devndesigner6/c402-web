@@ -370,6 +370,15 @@ export default function Sandbox({
                         </pre>
                       </div>
 
+                      {responseState.status === 200 && responseState.data?.receipt && (
+                        <div style={{ marginTop: '12px', border: '1px solid rgba(16,185,129,0.1)', backgroundColor: 'var(--accent-green-bg)', padding: '10px', borderRadius: '4px' }}>
+                          <div style={{ fontSize: '0.68rem', color: 'var(--fg-muted)', marginBottom: '6px' }}>Verified payment receipt</div>
+                          <a href={`https://preprod.cardanoscan.io/transaction/${responseState.data.receipt.tx_hash}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-green)', fontSize: '0.7rem', wordBreak: 'break-all' }}>
+                            View transaction on Cardano Preprod explorer ↗
+                          </a>
+                        </div>
+                      )}
+
                       {responseState.status === 200 && (
                         <div style={{ marginTop: '12px', border: '1px solid rgba(16,185,129,0.1)', backgroundColor: 'var(--accent-green-bg)', padding: '10px', borderRadius: '4px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-green)', fontSize: '0.7rem', fontWeight: '600', marginBottom: '4px', textTransform: 'uppercase' }}>

@@ -32,7 +32,7 @@ Create a **Web Service** from the GitHub repository:
 - Build command: `npm install`
 - Start command: `npm start`
 - Environment: Node
-- Add `PAYOUT_ADDRESS`, `BLOCKFROST_KEY`, `CEREBRAS_KEY`, and `ADMIN_TOKEN` as secret environment variables.
+- Add `PAYOUT_ADDRESS`, `BLOCKFROST_KEY`, `CEREBRAS_KEY`, `ADMIN_TOKEN`, and `ALLOWED_ORIGINS` as environment variables. Set `ALLOWED_ORIGINS` to the exact Vercel URL, for example `https://your-project.vercel.app`.
 - Render sets `PORT`; the server already reads it.
 
 After deploy, verify:
@@ -58,13 +58,13 @@ If Vercel does not rewrite SPA routes automatically, add a `vercel.json` rewrite
 
 ## 4. Configure CORS
 
-The current backend permits browser origins for the MVP. Before production, restrict `origin` in `backend/server.js` to the exact Vercel domain, for example:
+Set `ALLOWED_ORIGINS` on Render to the exact Vercel URL, for example:
 
-```js
-origin: ['https://your-project.vercel.app']
+```text
+ALLOWED_ORIGINS=https://your-project.vercel.app
 ```
 
-Add your custom domain only when it is known. Redeploy Render after changing it.
+For local testing, include `http://localhost:5173` as a comma-separated origin. Add a custom domain only when it is known, then redeploy Render.
 
 ## 5. Test the real flow
 

@@ -69,7 +69,7 @@ export default function App() {
 
   // Developer Console state with LocalStorage persistence
   const [myEndpoints, setMyEndpoints] = useState(() => {
-    const saved = localStorage.getItem('C402_DEV_ENDPOINTS');
+    const saved = localStorage.getItem('C402_DEV_ENDPOINTS_V2');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -85,8 +85,8 @@ export default function App() {
         priceLovelace: 1000000,
         priceAda: "1",
         targetUrl: "https://api.cerebras.ai/v1/chat/completions",
-        calls: 142,
-        earnings: "142"
+        calls: 0,
+        earnings: "0.00"
       },
       {
         id: "ep-2",
@@ -95,8 +95,8 @@ export default function App() {
         priceLovelace: 1000000,
         priceAda: "1",
         targetUrl: "https://cardano-preprod.blockfrost.io/api/v0/blocks",
-        calls: 89,
-        earnings: "89"
+        calls: 0,
+        earnings: "0.00"
       }
     ];
   });
@@ -112,7 +112,7 @@ export default function App() {
 
   // Save developer endpoints to local storage
   useEffect(() => {
-    localStorage.setItem('C402_DEV_ENDPOINTS', JSON.stringify(myEndpoints));
+    localStorage.setItem('C402_DEV_ENDPOINTS_V2', JSON.stringify(myEndpoints));
   }, [myEndpoints]);
 
   const syncSpentList = async () => {
@@ -242,29 +242,36 @@ export default function App() {
   const triggerApiCall = async (headerOverrides = {}) => {
     setIsCallingApi(true);
     setResponseState(null);
-    
-    const timestamp = new Date().toLocaleTimeString();
-    setGatewayLogs(prev => [
-      `[${timestamp}] [Client] GET ${selectedEndpoint.route}`,
-      ...prev
-    ]);
 
-    // Append configured API key in request headers
     const activeHeaders = { ...requestHeaders, ...headerOverrides };
-    if (apiKey) {
-      activeHeaders['X-Cerebras-Key'] = apiKey;
+    if (apiKey) activeHeaders['X-Cerebras-Key'] = apiKey;
+
+    let result;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const timestamp = new Date().toLocaleTimeString();
+      setGatewayLogs(prev => [
+        `[${timestamp}] [Client] GET ${selectedEndpoint.route}${attempt ? ` (verification retry ${attempt}/3)` : ''}`,
+        ...prev
+      ]);
+
+      result = await processC402Request(selectedEndpoint.route, activeHeaders, selectedEndpoint);
+      if (result.status !== 425 || !activeHeaders.Authorization || attempt === 3) break;
+
+      const waitMs = [5000, 10000, 20000][attempt];
+      setGatewayLogs(prev => [
+        `[${new Date().toLocaleTimeString()}] [Gateway] Transaction submitted; waiting ${waitMs / 1000}s for Blockfrost indexing...`,
+        ...prev
+      ]);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
     }
 
-    const result = await processC402Request(selectedEndpoint.route, activeHeaders, selectedEndpoint);
-    
     setResponseState(result);
     setIsCallingApi(false);
-
     const resTimestamp = new Date().toLocaleTimeString();
 
     if (result.status === 402) {
       setGatewayLogs(prev => [
-        `[${resTimestamp}] [Gateway] ⚠ HTTP 402 Payment Required - Challenge Issued for ${selectedEndpoint.route}`,
+        `[${resTimestamp}] [Gateway] ⚠ HTTP 402 Payment Required - Challenge issued for ${selectedEndpoint.route}`,
         ...prev
       ]);
       setPaymentChallenge({
@@ -273,21 +280,19 @@ export default function App() {
         reference: result.headers['x-c402-reference'] || result.headers['X-C402-Reference'],
         network: result.headers['x-c402-network'] || result.headers['X-C402-Network'] || 'preprod'
       });
-    } else if (result.status === 401) {
+    } else if (result.status === 401 || result.status === 425 || result.status >= 500) {
       setGatewayLogs(prev => [
-        `[${resTimestamp}] [Gateway] ❌ HTTP 401 Unauthorized - ${result.data.error}: ${result.data.message}`,
+        `[${resTimestamp}] [Gateway] ❌ HTTP ${result.status} - ${result.data?.message || 'Request failed'}`,
         ...prev
       ]);
     } else if (result.status === 200) {
       setGatewayLogs(prev => [
-        `[${resTimestamp}] [Gateway] ✓ HTTP 200 OK - Payment verified. Data payload returned successfully.`,
+        `[${resTimestamp}] [Gateway] ✓ HTTP 200 OK - Payment verified and receipt returned.`,
         ...prev
       ]);
-      syncSpentList();
       const verifiedTxHash = activeHeaders['Authorization']?.split(' ')[1];
       if (verifiedTxHash) triggerCerebrasAudit(verifiedTxHash);
-      
-      // Update local dev console statistics
+
       setMyEndpoints(prev => prev.map(ep => {
         if (ep.route === selectedEndpoint.route) {
           const calls = ep.calls + 1;
@@ -297,6 +302,8 @@ export default function App() {
         return ep;
       }));
     }
+
+    return result;
   };
 
   // Build & submit real Cardano transaction via CIP-30
