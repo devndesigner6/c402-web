@@ -33,7 +33,7 @@ export const decodeCardanoAddress = (hexAddress) => {
 // ponytail: real tx hashes come from wallet signing, not generated
 
 // Base API URL for backend verification (configured for Vercel/Render deployments)
-const BACKEND_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const BACKEND_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/$/, "");
 
 // C402 Challenge-Response Flow by executing real backend endpoints
 export const processC402Request = async (route, headers = {}, activeEndpoint) => {
@@ -80,11 +80,12 @@ export const processC402Request = async (route, headers = {}, activeEndpoint) =>
     };
   } catch (error) {
     clearTimeout(timeoutId);
+    console.error("Fetch failed:", error);
     return {
       status: 503,
       statusText: "Service Unavailable",
       headers: {},
-      data: { error: "Gateway unavailable", message: "Start the backend and configure BLOCKFROST_KEY for real payment verification." }
+      data: { error: "Gateway unavailable", message: `Start the backend and configure BLOCKFROST_KEY. Error: ${error.message}` }
     };
   }
 };
